@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Press — files to Markdown</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#14161A;
+    --panel:#1C1F25;
+    --panel-line:#2B2F37;
+    --ink:#E7E4DB;
+    --ink-dim:#9A9C9F;
+    --amber:#D8A93B;
+    --teal:#4FA891;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'IBM Plex Serif', serif;
+    min-height:100vh;
+    display:flex;
+    flex-direction:column;
+  }
+  ::selection{background:var(--amber);color:#14161A;}
+
+  header{
+    padding:2.5rem 1.5rem 1rem;
+    max-width:760px;
+    margin:0 auto;
+    width:100%;
+  }
+  .eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:0.9rem;
+  }
+  h1{
+    font-family:'IBM Plex Mono', monospace;
+    font-weight:600;
+    font-size:clamp(1.7rem, 5vw, 2.6rem);
+    line-height:1.15;
+    margin:0 0 0.9rem;
+    letter-spacing:-0.01em;
+  }
+  h1 .arrow{color:var(--amber);}
+  p.lede{
+    color:var(--ink-dim);
+    font-size:1.02rem;
+    line-height:1.6;
+    max-width:52ch;
+    margin:0;
+  }
+
+  main{
+    flex:1;
+    max-width:760px;
+    margin:0 auto;
+    width:100%;
+    padding:1.5rem;
+    display:flex;
+    flex-direction:column;
+    gap:1.25rem;
+  }
+
+  .dropzone{
+    border:1px dashed var(--panel-line);
+    border-radius:2px;
+    background:var(--panel);
+    padding:2.6rem 1.5rem;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color 0.15s ease, background 0.15s ease;
+    position:relative;
+  }
+  .dropzone:hover, .dropzone.drag{
+    border-color:var(--amber);
+    background:#20242B;
+  }
+  .dropzone input{
+    position:absolute;
+    inset:0;
+    opacity:0;
+    cursor:pointer;
+  }
+  .slot{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--amber);
+    font-size:0.78rem;
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    margin-bottom:0.6rem;
+  }
+  .dropzone .main-copy{
+    font-size:1.05rem;
+    color:var(--ink);
+  }
+  .dropzone .sub-copy{
+    font-family:'IBM Plex Mono', monospace;
+    color:var(--ink-dim);
+    font-size:0.75rem;
+    margin-top:0.6rem;
+  }
+
+  .status{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.85rem;
+    color:var(--ink-dim);
+    min-height:1.2em;
+  }
+  .status.error{ color:#D8664B; }
+  .status.ok{ color:var(--teal); }
+
+  .output-panel{
+    display:none;
+    border:1px solid var(--panel-line);
+    background:var(--panel);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .output-panel.visible{ display:block; }
+  .output-bar{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0.75rem 1rem;
+    border-bottom:1px solid var(--panel-line);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.75rem;
+    color:var(--ink-dim);
+  }
+  .output-bar .fname{ color:var(--ink); }
+  .btn-row{ display:flex; gap:0.5rem; }
+  button.action{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.72rem;
+    letter-spacing:0.05em;
+    text-transform:uppercase;
+    background:transparent;
+    border:1px solid var(--panel-line);
+    color:var(--ink);
+    padding:0.4rem 0.7rem;
+    border-radius:2px;
+    cursor:pointer;
+    transition:border-color 0.15s ease, color 0.15s ease;
+  }
+  button.action:hover{
+    border-color:var(--amber);
+    color:var(--amber);
+  }
+  pre.md-output{
+    margin:0;
+    padding:1.2rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.82rem;
+    line-height:1.55;
+    color:var(--ink);
+    white-space:pre-wrap;
+    word-break:break-word;
+    max-height:50vh;
+    overflow-y:auto;
+  }
+
+  footer{
+    max-width:760px;
+    margin:0 auto;
+    width:100%;
+    padding:1.5rem;
+    font-family:'IBM Plex Mono', monospace;
+    font-size:0.7rem;
+    color:var(--ink-dim);
+    letter-spacing:0.02em;
+  }
+  footer a{ color:var(--teal); text-decoration:none; }
+  footer a:hover{ text-decoration:underline; }
+
+  @media (prefers-reduced-motion: no-preference){
+    .dropzone, button.action{ transition-duration:0.15s; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Local conversion &middot; powered by MarkItDown</div>
+  <h1>File <span class="arrow">&rarr;</span> Markdown</h1>
+  <p class="lede">Drop a PDF, Word, PowerPoint, Excel, or text file. Get back clean Markdown, ready to paste into an LLM prompt or a notes app.</p>
+</header>
+
+<main>
+  <div class="dropzone" id="dropzone">
+    <input type="file" id="fileInput" accept=".pdf,.docx,.pptx,.xlsx,.xls,.csv,.json,.xml,.html,.txt,.zip,.epub" />
+    <div class="slot">Insert file</div>
+    <div class="main-copy">Drop a file here, or tap to browse</div>
+    <div class="sub-copy">PDF &middot; DOCX &middot; PPTX &middot; XLSX &middot; CSV &middot; HTML &middot; TXT — up to ~4MB</div>
+  </div>
+
+  <div class="status" id="status"></div>
+
+  <div class="output-panel" id="outputPanel">
+    <div class="output-bar">
+      <span class="fname" id="fname"></span>
+      <div class="btn-row">
+        <button class="action" id="copyBtn">Copy</button>
+        <button class="action" id="downloadBtn">Download .md</button>
+      </div>
+    </div>
+    <pre class="md-output" id="mdOutput"></pre>
+  </div>
+</main>
+
+<footer>
+  Runs on a free serverless function. Files are converted in memory and not stored. &middot;
+  <a href="https://github.com/microsoft/markitdown" target="_blank" rel="noopener">microsoft/markitdown</a>
+</footer>
+
+<script>
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const statusEl = document.getElementById('status');
+const outputPanel = document.getElementById('outputPanel');
+const mdOutput = document.getElementById('mdOutput');
+const fnameEl = document.getElementById('fname');
+const copyBtn = document.getElementById('copyBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+
+let currentFilename = 'output.md';
+
+['dragenter','dragover'].forEach(evt => {
+  dropzone.addEventListener(evt, e => {
+    e.preventDefault();
+    dropzone.classList.add('drag');
+  });
+});
+['dragleave','drop'].forEach(evt => {
+  dropzone.addEventListener(evt, e => {
+    e.preventDefault();
+    dropzone.classList.remove('drag');
+  });
+});
+dropzone.addEventListener('drop', e => {
+  const file = e.dataTransfer.files[0];
+  if (file) handleFile(file);
+});
+fileInput.addEventListener('change', () => {
+  if (fileInput.files[0]) handleFile(fileInput.files[0]);
+});
+
+function setStatus(msg, kind) {
+  statusEl.textContent = msg;
+  statusEl.className = 'status' + (kind ? ' ' + kind : '');
+}
+
+function handleFile(file) {
+  outputPanel.classList.remove('visible');
+  setStatus('Reading ' + file.name + '\u2026');
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    try {
+      const base64 = reader.result.split(',')[1];
+      setStatus('Converting ' + file.name + '\u2026');
+
+      const res = await fetch('/api/convert', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: file.name, file: base64 })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setStatus('Error: ' + (data.error || res.statusText), 'error');
+        return;
+      }
+
+      currentFilename = file.name.replace(/\.[^.]+$/, '') + '.md';
+      fnameEl.textContent = file.name;
+      mdOutput.textContent = data.markdown || '(no text extracted)';
+      outputPanel.classList.add('visible');
+      setStatus('Done.', 'ok');
+    } catch (err) {
+      setStatus('Error: ' + err.message, 'error');
+    }
+  };
+  reader.onerror = () => setStatus('Could not read file.', 'error');
+  reader.readAsDataURL(file);
+}
+
+copyBtn.addEventListener('click', async () => {
+  await navigator.clipboard.writeText(mdOutput.textContent);
+  copyBtn.textContent = 'Copied';
+  setTimeout(() => copyBtn.textContent = 'Copy', 1200);
+});
+
+downloadBtn.addEventListener('click', () => {
+  const blob = new Blob([mdOutput.textContent], { type: 'text/markdown' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = currentFilename;
+  a.click();
+  URL.revokeObjectURL(url);
+});
+</script>
+
+</body>
+</html>
